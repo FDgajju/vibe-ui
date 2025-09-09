@@ -53,6 +53,8 @@ const SignUp: React.FC = () => {
 
         localStorage.setItem("token", token);
         localStorage.setItem("user_id", user._id);
+        localStorage.setItem("user_data", JSON.stringify(user));
+
 
         dispatch(signIn(user));
         setSignedInUser(user);
@@ -99,8 +101,6 @@ const SignUp: React.FC = () => {
           },
         },
       );
-
-      
 
       // navigate to feed
       window.location.href = "/feed";

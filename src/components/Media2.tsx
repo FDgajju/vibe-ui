@@ -25,7 +25,7 @@ const Media: React.FC<MediaProps> = ({ media }) => {
           <img
             src={m.url}
             alt={m.name}
-            className="w-full h-auto object-cover cursor-pointer rounded-xl"
+            className="w-full h-auto object-cover cursor-pointer"
             onClick={() => handlePreview(m.url)}
           />
         ) : m.type.startsWith("video") ? (

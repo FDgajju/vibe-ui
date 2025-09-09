@@ -26,4 +26,7 @@ export type PostT = {
   location: string;
   isPrivate: boolean;
   createdAt: string;
+  isReacted: boolean;
+  likes?: number 
+  comments?: number 
 };

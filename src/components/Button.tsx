@@ -2,7 +2,7 @@ import type React from "react";
 
 type ButtonProps = {
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
   variant?: "primary" | "secondary" | "ghost";
   className?: string;
   type?: "button" | "submit" | "reset";

@@ -1,7 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
+import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import authReducer from "./authSlice";
+import postsReducer from "./postsSlice";
 
 const persistConfig = {
   key: "root",
@@ -14,10 +15,18 @@ const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
+    posts: postsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false, 
+      serializableCheck: {
+        ignoredActions: [
+          "persist/PERSIST",
+          "persist/REGISTER",
+          "persist/REHYDRATE",
+        ],
+        ignoredPaths: ["_persist"],
+      },
     }),
 });
 

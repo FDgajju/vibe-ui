@@ -1,15 +1,26 @@
 import type React from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_data");
+    navigate("/signin");
+  };
+
   const navbarItems = [
     {
       name: "Settings",
       path: "/settings",
+      onClick: undefined, // No specific onClick for Settings
     },
     {
       name: "Sign Out",
-      path: "/signin",
+      path: "/signin", // Keep path for styling, but navigation handled by onClick
+      onClick: handleSignOut,
     },
   ];
   return (
@@ -28,6 +39,7 @@ const Navbar: React.FC = () => {
             <li key={el.name}>
               <NavLink
                 to={el.path}
+                onClick={el.onClick}
                 className={({ isActive }) =>
                   `px-3 py-2 rounded-md text-sm md:text-base font-medium transition ${
                     isActive

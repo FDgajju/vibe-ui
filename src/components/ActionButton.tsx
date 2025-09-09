@@ -3,7 +3,7 @@ import type React from "react";
 type ActionButtonProps = {
   icon: React.ReactNode;
   label?: string | number;
-  onClick?: () => void;
+  onClick?: () => Promise<void> | void;
   className?: string;
 };
 
@@ -18,7 +18,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       type="button"
       onClick={onClick}
       className={
-        "flex items-center gap-1 text-gray-700 hover:text-black transition-colors"
+        "flex items-center gap-1 text-gray-700 hover:text-black transition-colors cursor-pointer"
       }
     >
       {icon}

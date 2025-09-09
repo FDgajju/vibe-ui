@@ -15,6 +15,8 @@ const CreatePost: React.FC = () => {
   const [post, setPost] = useState<Partial<PostT>>({});
   const navigate = useNavigate();
 
+  const [charCount, setCharCount] = useState(0);
+
   const [loading, setLoading] = useState(false);
 
   const handleOnFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -42,15 +44,27 @@ const CreatePost: React.FC = () => {
   ) => {
     const { name, value } = e.target;
 
+    if (name === "content") setCharCount(value.length);
+
     setPost((p) => ({ ...p, [name]: value }));
   };
 
-  const handleOnPost = async () => {
+  const handleOnPost = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
 
-    if(!post.content && !files.length) {
-      toast.error("Failed to Create Post, please add content, media")
+    if (!post.content && !files.length) {
+      toast.error("Failed to Create Post, please add content, media");
+      setLoading(false);
+      return;
     }
+
+    if (post.content && post.content.length > 280) {
+      toast.error("The caption content length exceed, max character is 280");
+      setLoading(false);
+      return;
+    }
+
     files.forEach((f) => URL.revokeObjectURL(f.maskImageUrl));
     const uploadedMediaIds = [];
 
@@ -70,7 +84,6 @@ const CreatePost: React.FC = () => {
       post.media = uploadedMediaIds;
       const postResp = await api.post("/post", post);
 
-      console.log(postResp.status )
       if (postResp.status === 201) {
         navigate("/feed");
       }
@@ -127,6 +140,10 @@ const CreatePost: React.FC = () => {
               className="block w-full h-50 rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
               placeholder="Add caption..."
             />
+
+            <p className="text-xs font-semibold text-gray-500">
+              Only 280 character allowed: {charCount}
+            </p>
           </div>
 
           <div
@@ -171,14 +188,14 @@ const CreatePost: React.FC = () => {
             </div>
           </div>
 
-          <Button
+          <button
             type="submit"
-            className="w-full justify-center focus-visible:outline  focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+            className="bg-white text-purple-700 shadow-sm hover:bg-purple-50 inline-flex items-center rounded-md font-semibold px-4 py-2.5 transition w-full justify-center focus-visible:outline  focus-visible:outline-offset-2 focus-visible:outline-purple-600"
             disabled={loading}
             onClick={handleOnPost}
           >
             {!loading ? "Post" : "Posting..."}
-          </Button>
+          </button>
         </form>
       </div>
     </div>

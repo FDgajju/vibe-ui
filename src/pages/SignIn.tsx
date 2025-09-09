@@ -30,8 +30,8 @@ const SignIn: React.FC = () => {
         const { token, ...user } = resp.data.data;
 
         localStorage.setItem("token", token);
-        localStorage.removeItem("user_id");
         localStorage.setItem("user_id", user._id);
+        localStorage.setItem("user_data", JSON.stringify(user));
 
         dispatch(signIn(user));
 
