@@ -1,8 +1,9 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
+import type { UserT } from "../types/types";
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: { username: string; email: string } | null;
+  user: UserT | null;
 }
 
 const initialState: AuthState = {
@@ -11,7 +12,7 @@ const initialState: AuthState = {
 };
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     signIn: (state, action) => {

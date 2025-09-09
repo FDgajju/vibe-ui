@@ -1,26 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Base resets and light theme by default */
 :root {
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --color-background: 249 250 251;
+  --color-text-primary: 17 24 39;
+  --color-primary: 168 85 247;
+
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
 body {
   margin: 0;
-  background-color: rgb(249 250 251); /* bg-gray-50 */
-  color: rgb(17 24 39); /* text-gray-900 */
+  background-color: rgb(var(--color-background)); /* bg-gray-50 */
+  color: rgb(var(--color-text-primary)); /* text-gray-900 */
 }
 
 /* Better focus outline for accessibility when not handled by Tailwind */
 *:focus-visible {
-  outline: 2px solid rgb(168 85 247); /* purple-500 */
+  outline: 2px solid rgb(var(--color-primary)); /* purple-500 */
   outline-offset: 2px;
 }
