@@ -10,18 +10,17 @@ import api from "../services/api";
 const Feed: React.FC = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("")
 
   const fetchFeed = useCallback(async () => {
     try {
-      const result = await api.get(`/post?${query}`);
+      const result = await api.get(`/post`);
       setPosts(result.data.data);
     } catch (error: any) {
       toast.error(error.response?.data.error.message);
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
