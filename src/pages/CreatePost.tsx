@@ -2,7 +2,7 @@ import { AxiosError } from "axios";
 import type React from "react";
 import { type ChangeEvent, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import Button from "../components/Button";
+// import Button from "../components/Button";
 import api from "../services/api";
 import type { MediaT, PostT } from "../types/types";
 import MediaPreview from "../components/MediaPreview";
