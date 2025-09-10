@@ -6,6 +6,7 @@ import Button from "../components/Button";
 import { signIn } from "../redux/authSlice";
 import api from "../services/api";
 import type { UserT } from "../types/types";
+import { useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
   const dispatch = useDispatch();
@@ -29,6 +30,7 @@ const SignUp: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +105,7 @@ const SignUp: React.FC = () => {
       );
 
       // navigate to feed
-      window.location.href = "/feed";
+      navigate("/feed")
     } catch (err: any) {
       setError(
         err.response?.data?.error.message || "Failed to upload profile image.",
