@@ -3,6 +3,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import authReducer from "./authSlice";
 import postsReducer from "./postsSlice";
+import socketReducer from "./socketSlice";
 
 const persistConfig = {
   key: "root",
@@ -16,6 +17,7 @@ const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     posts: postsReducer,
+    socket: socketReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

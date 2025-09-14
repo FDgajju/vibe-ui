@@ -6,7 +6,7 @@ import api from "../services/api";
 import type { UserT } from "../types/types";
 import { prettyDate } from "../utils/dateFormate";
 import Button from "./Button";
-import { Socket } from "socket.io-client";
+import { useSocket } from "../hooks/useSocket";
 
 export type CommentT = {
   _id: string;
@@ -17,15 +17,14 @@ export type CommentT = {
 
 type CommentsSectionProps = {
   postId: string;
-  socket: Socket;
   handleCommentAdded: () => void;
 };
 
 const CommentsSection: React.FC<CommentsSectionProps> = ({
   postId,
-  socket,
   handleCommentAdded,
 }) => {
+  const { socket, isConnected } = useSocket();
   const [comments, setComments] = useState<CommentT[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
@@ -111,10 +110,10 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
 
   // socket
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     const handleNewComment = (newComment: CommentT) => {
-      console.log(newComment.comment);
+      console.log('New comment received:', newComment.comment);
 
       setComments((prevComments) => [newComment, ...prevComments]);
       handleCommentAdded();
@@ -125,70 +124,36 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
     return () => {
       socket.off("commentAdded", handleNewComment);
     };
-  }, [socket]);
+  }, [socket, isConnected, handleCommentAdded]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || !socket || !isConnected) return;
+    
     const content = input.trim();
     const userId = localStorage.getItem("user_id");
 
-    // // add comment
-    // const tempId = Date.now().toString(16).padStart(24, "0"); // mongo id
-    // const optimistic: CommentT = {
-    //   _id: tempId,
-    //   comment: content,
-    //   createdAt: new Date().toISOString(),
-    //   by: {
-    //     _id: localStorage.getItem("user_id") || "me",
-    //     fullName:
-    //       JSON.parse(localStorage.getItem("user_data") || "{}")?.fullName ||
-    //       "You",
-    //     // @ts-expect-error
-    //     profileImage: {
-    //       url:
-    //         JSON.parse(localStorage.getItem("user_data") || "{}")?.profileImage
-    //           ?.url || "",
-    //     },
-    //   },
-    // };
+    if (!userId) {
+      toast.error('Please sign in to comment');
+      return;
+    }
 
     setSubmitting(true);
-
-    // setComments((prev) => [optimistic, ...prev]);
     setInput("");
 
-    socket.emit("commentPost", {
-      post: postId,
-      comment: content,
-      by: userId,
-    });
-
-    setSubmitting(false);
-
-    // try {
-    //   const res = await api.post("/comment", {
-    //     post: postId,
-    //     comment: content,
-    //   });
-    //   const savedComment = res.data.data as CommentT;
-    //   setComments((prev) =>
-    //     prev.map((c) => (c._id === tempId ? savedComment : c)),
-    //   );
-
-    // } catch (error) {
-    //   // Revert optimistic
-    //   setComments((prev) => prev.filter((c) => c._id !== tempId));
-    //   if (error instanceof AxiosError) {
-    //     toast.error(
-    //       error.response?.data?.error?.message || "Failed to add comment",
-    //     );
-    //   } else {
-    //     toast.error("Failed to add comment");
-    //   }
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    try {
+      socket.emit("commentPost", {
+        post: postId,
+        comment: content,
+        by: userId,
+      });
+    } catch (error) {
+      console.error('Socket emit error:', error);
+      toast.error('Failed to post comment');
+      setInput(content); // Restore input on error
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

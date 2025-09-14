@@ -2,27 +2,22 @@ import { AxiosError } from "axios";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import ActionBar from "../components/ActionBar";
 import CommentsSection from "../components/CommentsSection";
 import Media from "../components/Media2";
+import { useSocket } from "../hooks/useSocket";
 import api from "../services/api";
 import type { PostT } from "../types/types";
 import { prettyDate } from "../utils/dateFormate";
-import { Link } from "react-router-dom";
-import { io } from "socket.io-client";
-import { BASE_URL } from "../constants/env";
-
-const socket = io(BASE_URL, {
-  reconnection: true,
-});
 
 const SinglePost: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<PostT | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const { socket, isConnected } = useSocket();
 
-    const handleCommentAdded = useCallback(() => {
+  const handleCommentAdded = useCallback(() => {
     setPost((currentPost) => {
       if (!currentPost) return null;
       return {
@@ -57,10 +52,13 @@ const SinglePost: React.FC = () => {
 
   // socket
   useEffect(() => {
-    if (!id) return;
+    if (!id || !socket || !isConnected) return;
+
+    const userId = localStorage.getItem("user_id");
+
+    // Join post room
     socket.emit("joinPostRoom", id);
     console.log(`Joined room for post: ${id}`);
-    const userId = localStorage.getItem("user_id")
 
     const handleUpdateLikes = (data: {
       postId: string;
@@ -68,14 +66,14 @@ const SinglePost: React.FC = () => {
       newLikesCount: number;
       isReacted: boolean;
     }) => {
-
       if (data.postId === id) {
         setPost((currentPost) => {
           if (!currentPost) return null;
           return {
             ...currentPost,
             reaction_count: data.newLikesCount,
-            isReacted: userId === data.user ? data.isReacted : post?.isReacted as boolean,
+            isReacted:
+              userId === data.user ? data.isReacted : currentPost.isReacted,
           };
         });
       }
@@ -89,20 +87,28 @@ const SinglePost: React.FC = () => {
       socket.off("updateLikes", handleUpdateLikes);
       // socket.off("commentAdded", handleCommentAdded);
     };
-  }, []);
+  }, [id, socket, isConnected]);
 
   const handleOnLike = async () => {
-    if (!post) return;
+    if (!post || !socket || !isConnected) return;
     const userId = localStorage.getItem("user_id");
     if (!userId) return;
 
+    const originalPost = { ...post };
     const optimistic = { ...post };
     optimistic.isReacted = !optimistic.isReacted;
     optimistic.reaction_count =
       (optimistic.reaction_count as number) + (optimistic.isReacted ? 1 : -1);
     setPost(optimistic);
 
-    socket.emit("likePost", { post: id, reaction: "heart", user: userId });
+    try {
+      socket.emit("likePost", { post: id!, reaction: "heart", user: userId });
+    } catch (error) {
+      // Rollback on error
+      setPost(originalPost);
+      toast.error("Failed to update like");
+      console.error("Socket emit error:", error);
+    }
   };
 
   if (loading || !post) {
@@ -154,7 +160,6 @@ const SinglePost: React.FC = () => {
       <div className="px-2 pb-4">
         <CommentsSection
           postId={post._id}
-          socket={socket}
           handleCommentAdded={handleCommentAdded}
         />
       </div>
