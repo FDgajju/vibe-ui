@@ -60,19 +60,22 @@ const SinglePost: React.FC = () => {
     if (!id) return;
     socket.emit("joinPostRoom", id);
     console.log(`Joined room for post: ${id}`);
+    const userId = localStorage.getItem("user_id")
 
     const handleUpdateLikes = (data: {
       postId: string;
+      user: string;
       newLikesCount: number;
       isReacted: boolean;
     }) => {
+
       if (data.postId === id) {
         setPost((currentPost) => {
           if (!currentPost) return null;
           return {
             ...currentPost,
             reaction_count: data.newLikesCount,
-            isReacted: data.isReacted,
+            isReacted: userId === data.user ? data.isReacted : post?.isReacted as boolean,
           };
         });
       }
