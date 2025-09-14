@@ -7,6 +7,13 @@ export type UserT = {
   profileImage: MediaT;
 };
 
+export interface UserWithStatsT extends UserT {
+  follower_count: number;
+  post_count: number;
+  following_count: number;
+  isFollowing: true;
+}
+
 export type MediaT = {
   _id: string;
   name: string;
@@ -15,6 +22,7 @@ export type MediaT = {
   type: string;
   uploadedBy: string;
   maskImageUrl: string;
+  originalname?: string;
 };
 
 export type PostT = {
@@ -27,6 +35,6 @@ export type PostT = {
   isPrivate: boolean;
   createdAt: string;
   isReacted: boolean;
-  likes?: number 
-  comments?: number 
+  reaction_count?: number;
+  comment_count?: number;
 };

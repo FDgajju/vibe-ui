@@ -1,12 +1,19 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import { Route, BrowserRouter as Router, Routes, useNavigate, useLocation } from "react-router-dom";
+import {
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import Navbar, { BottomNavBar } from "../components/Navbar";
 import CreatePost from "../pages/CreatePost";
 import Feed from "../pages/Feed";
 import Profile from "../pages/Profile";
 import SignIn from "../pages/SignIn";
 import SignUp from "../pages/SignUp";
+import SinglePost from "../pages/SinglePost";
 
 const AuthChecker: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +25,10 @@ const AuthChecker: React.FC = () => {
       const userId = localStorage.getItem("user_id");
 
       if (!token || !userId) {
-        if (location.pathname !== "/signin" && location.pathname !== "/signup") {
+        if (
+          location.pathname !== "/signin" &&
+          location.pathname !== "/signup"
+        ) {
           navigate("/signin");
         }
         return false;
@@ -46,8 +56,10 @@ const AppRoutes: React.FC = () => {
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/post/:id" element={<SinglePost />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/" element={<Feed />} />
+          <Route path="*" element={<Feed />} />
         </Routes>
       </main>
       <BottomNavBar />

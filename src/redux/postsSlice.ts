@@ -45,9 +45,15 @@ const postsSlice = createSlice({
       if (post) {
         post.isReacted = !post.isReacted;
 
-        if (!post.isReacted) post.likes = (post.likes as number) - 1;
-        else post.likes = (post.likes as number) + 1;
+        if (!post.isReacted)
+          post.reaction_count = (post.reaction_count as number) - 1;
+        else post.reaction_count = (post.reaction_count as number) + 1;
       }
+    },
+    addPosts: (state, action: PayloadAction<PostT[]>) => {
+      state.posts = [...state.posts, ...action.payload];
+      state.loading = false;
+      state.error = null;
     },
   },
 });
@@ -58,5 +64,6 @@ export const {
   setError,
   updatePostReaction,
   togglePostReaction,
+  addPosts,
 } = postsSlice.actions;
 export default postsSlice.reducer;

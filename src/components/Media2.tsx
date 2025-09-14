@@ -23,14 +23,17 @@ const Media: React.FC<MediaProps> = ({ media }) => {
         {m.type.startsWith("image") ? (
           // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
           <img
+            key={m.url}
             src={m.url}
             alt={m.name}
             className="w-full h-auto object-cover cursor-pointer"
-            onClick={() => handlePreview(m.url)}
+            onClick={() => {
+              handlePreview(m.url);
+            }}
           />
         ) : m.type.startsWith("video") ? (
           // biome-ignore lint/a11y/useMediaCaption: <explanation>
-          <video src={m.url} controls className="w-full h-auto rounded-xl" />
+          <video src={m.url} controls className="w-full h-auto" />
         ) : null}
 
         {previewUrl && (
@@ -42,15 +45,15 @@ const Media: React.FC<MediaProps> = ({ media }) => {
 
   //multiple media
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide w-full">
+    <div className="flex gap-1 overflow-x-auto scrollbar-hide w-full">
       {media.map((m) =>
         m.type.startsWith("image") ? (
           // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
           <img
-            key={m.key}
+            key={m.url}
             src={m.url}
             alt={m.name}
-            className="h-64 w-auto object-cover cursor-pointer rounded-xl flex-shrink-0"
+            className="h-64 w-auto object-cover cursor-pointer flex-shrink-0"
             onClick={() => handlePreview(m.url)}
           />
         ) : m.type.startsWith("video") ? (

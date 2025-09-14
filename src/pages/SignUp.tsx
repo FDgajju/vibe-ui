@@ -2,11 +2,11 @@ import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import { signIn } from "../redux/authSlice";
 import api from "../services/api";
 import type { UserT } from "../types/types";
-import { useNavigate } from "react-router-dom";
 
 const SignUp: React.FC = () => {
   const dispatch = useDispatch();
@@ -20,6 +20,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [bio, setBio] = useState("");
   const [signedInUser, setSignedInUser] = useState<UserT | null>(null);
 
   // complete profile
@@ -30,7 +31,7 @@ const SignUp: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +58,6 @@ const SignUp: React.FC = () => {
         localStorage.setItem("user_id", user._id);
         localStorage.setItem("user_data", JSON.stringify(user));
 
-
         dispatch(signIn(user));
         setSignedInUser(user);
 
@@ -66,8 +66,11 @@ const SignUp: React.FC = () => {
       } else {
         setError("Failed to create account.");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error.message || "Something went wrong.");
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { error?: { message?: string } } };
+      };
+      setError(error.response?.data?.error?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -75,40 +78,50 @@ const SignUp: React.FC = () => {
 
   const handleProfileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profileImage || !userId || !token) return;
+    if (!profileImage || !bio || !userId || !token) return;
 
     setLoading(true);
     setError(null);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", profileImage);
-      URL.revokeObjectURL(profileImagePreview as string);
+    const updateData: { profileImage?: string; bio?: string } = {};
 
-      const fileResp = await api.post("/file", formData, {
+    try {
+      if (profileImage) {
+        const formData = new FormData();
+        formData.append("file", profileImage);
+        URL.revokeObjectURL(profileImagePreview as string);
+
+        const fileResp = await api.post("/file", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        updateData.profileImage = fileResp.data.data._id;
+      }
+
+      updateData.bio = bio;
+
+      const updatedUser = await api.patch("/user/update", updateData, {
         headers: {
-          "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      const fileId = fileResp.data.data._id;
+      const { data } = updatedUser.data;
 
-      await api.patch(
-        "/user/update",
-        { profileImage: fileId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      localStorage.setItem("user_data", JSON.stringify(data));
+      dispatch(signIn(data));
 
       // navigate to feed
-      navigate("/feed")
-    } catch (err: any) {
+      navigate("/feed");
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { error?: { message?: string } } };
+      };
       setError(
-        err.response?.data?.error.message || "Failed to upload profile image.",
+        error.response?.data?.error?.message ||
+          "Failed to upload profile image.",
       );
     } finally {
       setLoading(false);
@@ -118,8 +131,10 @@ const SignUp: React.FC = () => {
   if (step === "completeProfile") {
     return (
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col justify-center items-center mx-auto max-w-md bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-6 sm:p-8 text-center">
-          <h2 className="text-xl font-bold mb-4">Complete your profile</h2>
+        <div className="flex flex-col justify-center items-center mx-auto max-w-md bg-background-secondary rounded-xl shadow-theme ring-1 ring-border p-6 sm:p-8 text-center">
+          <h2 className="text-xl font-bold mb-4 text-primary">
+            Complete your profile
+          </h2>
 
           <img
             src={
@@ -128,35 +143,40 @@ const SignUp: React.FC = () => {
                 : signedInUser?.profileImage.url
             }
             alt="profile"
-            className="bg-amber-300 h-35 w-35 rounded-full"
+            className="bg-warning-light h-35 w-35 rounded-full"
             loading="lazy"
           />
+          <form onSubmit={handleProfileUpload} className="space-y-5 mt-5">
+            <textarea
+              onChange={(e) => setBio(e.target.value)}
+              name="bio"
+              id="bio"
+              placeholder="Add bio"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+            ></textarea>
 
-          <p className="text-gray-600 mb-6 text-center">
-            Please upload a profile picture to continue
-          </p>
+            <div className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
 
-          <form onSubmit={handleProfileUpload} className="space-y-5">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
+                  if (profileImagePreview)
+                    URL.revokeObjectURL(profileImagePreview);
 
-                if (profileImagePreview)
-                  URL.revokeObjectURL(profileImagePreview);
+                  if (file) {
+                    setProfileImage(file || null);
+                    setProfileImagePreview(URL.createObjectURL(file));
+                  } else {
+                    toast.error("error file upload");
+                  }
+                }}
+                className="block w-full text-sm text-tertiary"
+              />
+            </div>
 
-                if (file) {
-                  setProfileImage(file || null);
-                  setProfileImagePreview(URL.createObjectURL(file));
-                } else {
-                  toast.error("error file upload");
-                }
-              }}
-              className="block w-full text-sm text-gray-600"
-            />
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-error">{error}</p>}
 
             <Button
               type="submit"
@@ -173,18 +193,18 @@ const SignUp: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mx-auto max-w-md bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-6">
+      <div className="mx-auto max-w-md bg-background-secondary rounded-xl shadow-theme ring-1 ring-border p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary text-center mb-6">
           Sign Up
         </h1>
 
         <form onSubmit={handleSignUp} className="space-y-5">
-          {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+          {error && <p className="text-sm text-error text-center">{error}</p>}
 
           <div className="space-y-2">
             <label
               htmlFor="fullname"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Full Name
             </label>
@@ -193,7 +213,7 @@ const SignUp: React.FC = () => {
               value={fullName}
               id="fullname"
               onChange={(e) => setFullName(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -201,7 +221,7 @@ const SignUp: React.FC = () => {
           <div className="space-y-2">
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Username
             </label>
@@ -210,7 +230,7 @@ const SignUp: React.FC = () => {
               id="username"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -218,7 +238,7 @@ const SignUp: React.FC = () => {
           <div className="space-y-2">
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Email address
             </label>
@@ -227,7 +247,7 @@ const SignUp: React.FC = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -235,7 +255,7 @@ const SignUp: React.FC = () => {
           <div className="space-y-2">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Password
             </label>
@@ -244,7 +264,7 @@ const SignUp: React.FC = () => {
               value={password}
               id="password"
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -252,7 +272,7 @@ const SignUp: React.FC = () => {
           <div className="space-y-2">
             <label
               htmlFor="cspassword"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Confirm Password
             </label>
@@ -261,9 +281,15 @@ const SignUp: React.FC = () => {
               value={passwordConfirm}
               id="cpassword"
               onChange={(e) => setPasswordConfirm(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
+            {password && passwordConfirm && password !== passwordConfirm && (
+              <p className="text-sm text-error text-left">Password not match</p>
+            )}
+            {password && passwordConfirm && password === passwordConfirm && (
+              <p className="text-sm text-success text-left">Password matched</p>
+            )}
           </div>
 
           <Button
@@ -274,11 +300,11 @@ const SignUp: React.FC = () => {
             {loading ? "Creating account..." : "Sign Up"}
           </Button>
 
-          <p className="text-sm text-gray-600 text-center">
+          <p className="text-sm text-tertiary text-center">
             Already have an account?{" "}
             <a
               href="/signin"
-              className="font-semibold text-purple-700 hover:underline"
+              className="font-semibold text-primary-color hover:underline"
             >
               Sign in
             </a>

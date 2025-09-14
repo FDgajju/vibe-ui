@@ -1,96 +1,123 @@
 import { AxiosError } from "axios";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  addPosts,
+  setError,
+  setPosts,
+  togglePostReaction,
+} from "../redux/postsSlice";
+import type { AppDispatch, RootState } from "../redux/store";
 import api from "../services/api";
-import type { PostT } from "../types/types";
-import { prettyDate } from "../utils/dateFormate";
-import ActionBar from "./ActionBar";
-import Media from "./Media2";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../redux/store";
-import { setPosts, togglePostReaction } from "../redux/postsSlice";
+import Post from "./Post";
+import PostCardSkeleton from "./PostCardSkeleton";
 
-const Post: React.FC<{ posts: PostT[] }> = ({ posts }) => {
+const PostList: React.FC<{ query?: string; authorId?: string }> = ({
+  query = "",
+  authorId,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { posts: reduxPosts } = useSelector((state: RootState) => state.posts);
+  const { posts, loading } = useSelector((state: RootState) => state.posts);
+
+  const [pageLoading, setPageLoading] = useState(false);
+  const [page, setPage] = useState<number>(1);
+  const [postMetadata, setPostMetadata] = useState<{
+    totalPages: number;
+  }>({ totalPages: 1 });
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      setPageLoading(true);
+
+      const url = authorId
+        ? `/post?author=${authorId}&page=${page}&limit=10`
+        : `/post?${query}&page=${page}&limit=10`;
+
+      const result = await api.get(url);
+
+      dispatch(addPosts(result.data.data));
+      setPostMetadata(result.data.meta);
+    } catch (error) {
+      //
+      dispatch(setError("Failed to load posts"));
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.error?.message || "Failed to load posts",
+        );
+      } else {
+        toast.error("Failed to load posts");
+      }
+    } finally {
+      setPageLoading(false);
+    }
+  }, [dispatch, query, authorId, page]);
 
   useEffect(() => {
-    dispatch(setPosts(posts ?? []));
-  }, [posts, dispatch]);
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const handleScroll = useCallback(async () => {
+    try {
+      if (
+        document.documentElement.scrollTop + window.innerHeight + 1 >
+        document.documentElement.scrollHeight
+      ) {
+        setPage((prev) => {
+          if (postMetadata.totalPages > prev) return prev + 1;
+          return prev;
+        });
+      }
+    } catch (_error) {}
+  }, [postMetadata]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  useEffect(() => {
+    dispatch(setPosts([]));
+  }, [dispatch]);
 
   const handleOnLike = async (postId: string) => {
     const userId = localStorage.getItem("user_id");
     if (!userId) return;
 
-    const currentPost = reduxPosts.find(p => p._id === postId);
+    const currentPost = posts.find((p) => p._id === postId);
     if (!currentPost) return;
 
-    // Optimistic update via Redux
     dispatch(togglePostReaction(postId));
 
     try {
       await api.post("/reaction", { post: postId, reaction: "heart" });
     } catch (error) {
-      // Revert optimistic update on failure
       dispatch(togglePostReaction(postId));
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data.error.message);
+        toast.error(error.response?.data?.error?.message);
       }
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-4">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <PostCardSkeleton key={`skeleton-${n}`} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {reduxPosts?.map((post) => (
-        <article
-          key={post._id}
-          className="bg-white rounded-md shadow-sm ring-1 ring-gray-200 overflow-hidden"
-        >
-          {/* User info x author */}
-          <div className="flex items-center gap-3 p-3 border-b border-gray-200">
-            <img
-              src={post.author.profileImage.url}
-              alt={post.author.fullName}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div className="flex flex-col">
-              <span className="font-semibold text-gray-900">
-                {post.author.fullName}
-              </span>
-              {post.location && (
-                <span className="text-xs text-gray-500">{post.location}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Media Section */}
-          <Media media={post.media} />
-
-          {/* Content Section */}
-          <div className="p-2">
-            <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-1">
-              {post.title}
-            </h3>
-            <p className="text-gray-700 leading-relaxed mb-4">{post.content}</p>
-
-            <ActionBar
-              likes={post.likes}
-              comments={post.comments}
-              isReacted={post.isReacted}
-              onLike={() => {
-                return handleOnLike(post._id);
-              }}
-            />
-            <div>
-              <span className="text-xs font-semibold text-gray-500">
-                {prettyDate(post.createdAt as string)}
-              </span>
-            </div>
-          </div>
-        </article>
+      {posts?.map((post) => (
+        <Post key={post._id} post={post} onLike={handleOnLike} />
       ))}
+
+      {pageLoading && <PostCardSkeleton />}
     </div>
   );
 };
 
-export default Post;
+export default PostList;

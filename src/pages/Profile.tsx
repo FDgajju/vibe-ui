@@ -3,26 +3,28 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import Button from "../components/Button";
-import Post from "../components/PostList";
+import PostList from "../components/PostList";
 import api from "../services/api";
-import type { PostT, UserT } from "../types/types";
+import type { PostT, UserWithStatsT } from "../types/types";
+import type { AppDispatch } from "../redux/store";
+import { useDispatch } from "react-redux";
+import { setError } from "../redux/postsSlice";
+import { AxiosError } from "axios";
 
 const Profile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [user, setUser] = useState<UserT | null>(null);
-  const [posts, setPosts] = useState<PostT[]>([]);
+  const [user, setUser] = useState<UserWithStatsT | null>(null);
+  const [_posts, _setPosts] = useState<PostT[]>([]);
   const [loading, setLoading] = useState(true);
+  const [following, setFollowing] = useState(false);
+
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     const fetchUserAndPosts = async () => {
       try {
-        const [userRes, postsRes] = await Promise.all([
-          api.get(`/user/${id}`),
-          api.get(`/post?author=${id}`),
-        ]);
-
+        const [userRes] = await Promise.all([api.get(`/user/${id}`)]);
         setUser(userRes.data.data);
-        setPosts(postsRes.data.data || []);
       } catch (error: any) {
         toast.error(
           error.response?.data.error?.message || "Failed to fetch user data",
@@ -35,74 +37,120 @@ const Profile: React.FC = () => {
     if (id) fetchUserAndPosts();
   }, [id]);
 
+  const onFollow = async () => {
+    try {
+      const resp = await api.post("/connection", { followTo: id });
+      if (resp.status.toString().startsWith("2")) {
+        setFollowing(true);
+        toast.success(`You are now following ${user?.fullName}`);
+      }
+    } catch (error) {
+      dispatch(setError("Failed to load posts"));
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.error?.message || "Failed to load posts",
+        );
+      } else {
+        toast.error("Failed to load posts");
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-gray-500">Loading profile...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex items-center space-x-3">
+          <div className="w-6 h-6 border-2 border-primary-lighter border-t-primary rounded-full animate-spin"></div>
+          <p className="text-tertiary">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p className="text-gray-600">User not found.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <p className="text-tertiary font-bold text-6xl">😕</p>
+        <p className="text-tertiary font-bold text-4xl">User not found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Profile header */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:space-x-8 space-y-4 sm:space-y-0">
-          <img
-            src={user.profileImage?.url || "https://via.placeholder.com/150"}
-            alt="Profile"
-            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border border-gray-300 mx-auto sm:mx-0"
-          />
+    <div className="min-h-screen bg-background">
+      {/* Profile Section */}
+      <div className="bg-background-secondary border-b border-primary-lighter">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+            <div className="flex justify-center sm:justify-start">
+              <img
+                src={
+                  user.profileImage?.url || "https://via.placeholder.com/150"
+                }
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border-2 border-default"
+              />
+            </div>
 
-          <div className="flex-1 text-center sm:text-left">
-            {/* Username and actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4 space-y-2 sm:space-y-0">
-              <h1 className="text-xl sm:text-2xl font-bold">{user.userName}</h1>
-              <div className="flex justify-center sm:justify-start space-x-2">
-                <Button className="px-4 py-1 text-sm font-semibold border rounded-md">
-                  Follow
-                </Button>
-                <Button className="px-4 py-1 text-sm font-semibold border rounded-md">
-                  Message
-                </Button>
+            {/* Profile Info */}
+            <div className="flex-1 text-center sm:text-left space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <h1 className="text-2xl font-bold text-primary">
+                  {user.userName}
+                </h1>
+                {localStorage.getItem("user_id") !== id && (
+                  <div className="flex justify-center sm:justify-start gap-3">
+                    <Button
+                      variant={following ? "secondary" : "primary"}
+                      disabled={!!following || !!user.isFollowing}
+                      onClick={onFollow}
+                    >
+                      {!!following || !!user.isFollowing
+                        ? "Following"
+                        : "Follow"}
+                    </Button>
+                    <Button>Message</Button>
+                  </div>
+                )}
               </div>
-            </div>
 
-            {/* Stats */}
-            <div className="flex justify-center sm:justify-start space-x-6 mb-4">
-              <p>
-                <span className="font-bold">{posts.length}</span> posts
-              </p>
-              <p>
-                <span className="font-bold">0</span> followers
-              </p>
-              <p>
-                <span className="font-bold">0</span> following
-              </p>
-            </div>
+              {/* Stats */}
+              <div className="flex justify-center sm:justify-start gap-8 font-semibold">
+                <div className="">
+                  <span className="font-semibold text-primary">
+                    {user.post_count}
+                  </span>
+                  <span className="text-tertiary ml-1">Posts</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-primary">
+                    {user.follower_count}
+                  </span>
+                  <span className="text-tertiary ml-1">Followers</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-primary">
+                    {user.following_count}
+                  </span>
+                  <span className="text-tertiary ml-1">Following</span>
+                </div>
+              </div>
 
-            {/* Bio */}
-            <div>
-              <h2 className="font-semibold">{user.fullName}</h2>
-              <p className="text-gray-700 text-sm sm:text-base">
-                {user.bio || "No bio yet."}
-              </p>
+              {/* Bio */}
+              <div className="space-y-2">
+                <h2 className="font-semibold text-primary">{user.fullName}</h2>
+                <p className="text-secondary max-w-md text-left">
+                  {user.bio || "No bio yet."}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Posts grid */}
-      <div className="p-2 sm:p-4 max-w-5xl mx-auto">
-        <Post posts={posts} />
+      {/* Posts Section */}
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <PostList authorId={id} />
       </div>
     </div>
   );

@@ -39,8 +39,13 @@ const SignIn: React.FC = () => {
       } else {
         toast.error("Invalid credentials, please try again.");
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.error.message || "Something went wrong.");
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { error?: { message?: string } } };
+      };
+      toast.error(
+        error.response?.data?.error?.message || "Something went wrong.",
+      );
     } finally {
       setLoading(false);
     }
@@ -48,8 +53,8 @@ const SignIn: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mx-auto max-w-md bg-white rounded-xl shadow-sm ring-1 ring-gray-200 p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-6">
+      <div className="mx-auto max-w-md bg-background-secondary rounded-xl shadow-theme ring-1 ring-border p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary text-center mb-6">
           Sign In
         </h1>
 
@@ -57,7 +62,7 @@ const SignIn: React.FC = () => {
           <div className="space-y-2">
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Username
             </label>
@@ -66,7 +71,7 @@ const SignIn: React.FC = () => {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               placeholder="username/email"
               required
             />
@@ -75,7 +80,7 @@ const SignIn: React.FC = () => {
           <div className="space-y-2">
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Password
             </label>
@@ -84,7 +89,7 @@ const SignIn: React.FC = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3"
+              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               placeholder="********"
               required
             />
@@ -93,16 +98,16 @@ const SignIn: React.FC = () => {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full justify-center focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+            className="w-full justify-center focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {loading ? "Signing in..." : "Sign In"}
           </Button>
 
-          <p className="text-sm text-gray-600 text-center">
+          <p className="text-sm text-tertiary text-center">
             Don't have an account?{" "}
             <a
               href="/signup"
-              className="font-semibold text-purple-700 hover:underline"
+              className="font-semibold text-primary-color hover:underline"
             >
               Sign up
             </a>
