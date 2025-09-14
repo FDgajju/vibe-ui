@@ -113,7 +113,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
     if (!socket || !isConnected) return;
 
     const handleNewComment = (newComment: CommentT) => {
-      console.log('New comment received:', newComment.comment);
+      console.log("New comment received:", newComment.comment);
 
       setComments((prevComments) => [newComment, ...prevComments]);
       handleCommentAdded();
@@ -129,12 +129,12 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || !socket || !isConnected) return;
-    
+
     const content = input.trim();
     const userId = localStorage.getItem("user_id");
 
     if (!userId) {
-      toast.error('Please sign in to comment');
+      toast.error("Please sign in to comment");
       return;
     }
 
@@ -148,8 +148,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({
         by: userId,
       });
     } catch (error) {
-      console.error('Socket emit error:', error);
-      toast.error('Failed to post comment');
+      console.error("Socket emit error:", error);
+      toast.error("Failed to post comment");
       setInput(content); // Restore input on error
     } finally {
       setSubmitting(false);

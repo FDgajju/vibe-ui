@@ -42,6 +42,12 @@ const Profile: React.FC = () => {
       const resp = await api.post("/connection", { followTo: id });
       if (resp.status.toString().startsWith("2")) {
         setFollowing(true);
+
+        setUser((cu) => ({
+          ...(cu as UserWithStatsT),
+          follower_count: (cu?.follower_count || 0) + 1,
+        }));
+
         toast.success(`You are now following ${user?.fullName}`);
       }
     } catch (error) {
