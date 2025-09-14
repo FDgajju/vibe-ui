@@ -33,7 +33,7 @@ commands:
           echo -e "Host *\n\tStrictHostKeyChecking no\n\n" >> ~/.ssh/config
           scp -i fingerprints 'vibe-ui.tar.gz' admin@35.154.24.229:/home/admin/data/archives
           echo "copied vibe-ui.tar.gz"
-          ssh -i fingerprints admin@35.154.24.229 'sh data/scripts/deploy.sh vibe-ui frontend_react index 3001'
+          ssh -i fingerprints admin@35.154.24.229 './data/scripts/deploy.sh vibe-ui frontend_react index 3001'
           echo "deployed!"
 
 executors:
