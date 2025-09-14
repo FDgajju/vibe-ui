@@ -15,11 +15,11 @@ const Navbar: React.FC = () => {
     {
       name: "Settings",
       path: "/settings",
-      onClick: undefined, // No specific onClick for Settings
+      onClick: undefined,
     },
     {
       name: "Sign Out",
-      path: "/signin", // Keep path for styling, but navigation handled by onClick
+      path: "/signin",
       onClick: handleSignOut,
     },
   ];
@@ -34,7 +34,7 @@ const Navbar: React.FC = () => {
             <h3 className="text-primary">VibeBook</h3>
           </Link>
         </div>
-        <ul className="hidden sm:flex items-center gap-1 md:gap-2">
+        <ul className="flex items-center gap-1 md:gap-2">
           {navbarItems.map((el) => (
             <li key={el.name}>
               <NavLink
