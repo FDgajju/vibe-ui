@@ -15,7 +15,8 @@ npm install
 Then, create a `.env` file in the root of the project and add the following environment variables:
 
 ```
-VITE_API_ENDPOINT=your_api_endpoint
+VITE_API_ENDPOINT=VITE_BASE_URL/api
+VITE_BASE_URL={{base_url}}
 ```
 
 Finally, run the development server:
