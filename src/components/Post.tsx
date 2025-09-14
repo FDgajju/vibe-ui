@@ -24,7 +24,7 @@ const Post: React.FC<{
     >
       <div className="flex items-center gap-3 p-3 border-b border-default">
         <img
-          src={post.author.profileImage.url}
+          src={post?.author?.profileImage?.url}
           alt={post.author.fullName}
           className="w-10 h-10 rounded-full object-cover"
         />
