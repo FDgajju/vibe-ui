@@ -140,7 +140,7 @@ const SignUp: React.FC = () => {
             src={
               profileImagePreview
                 ? profileImagePreview
-                : signedInUser?.profileImage.url
+                : signedInUser?.profileImage?.url
             }
             alt="profile"
             className="bg-warning-light h-35 w-35 rounded-full"
@@ -152,7 +152,7 @@ const SignUp: React.FC = () => {
               name="bio"
               id="bio"
               placeholder="Add bio"
-              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+              className="border border-b-gray-500 block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
             ></textarea>
 
             <div className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3">
@@ -201,7 +201,7 @@ const SignUp: React.FC = () => {
         <form onSubmit={handleSignUp} className="space-y-5">
           {error && <p className="text-sm text-error text-center">{error}</p>}
 
-          <div className="space-y-2">
+          <div className="space-y-2 ">
             <label
               htmlFor="fullname"
               className="block text-sm font-medium text-secondary"
@@ -213,7 +213,7 @@ const SignUp: React.FC = () => {
               value={fullName}
               id="fullname"
               onChange={(e) => setFullName(e.target.value)}
-              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+              className=" border border-b-gray-500  block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -230,7 +230,7 @@ const SignUp: React.FC = () => {
               id="username"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+              className="border border-b-gray-500 block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -247,7 +247,7 @@ const SignUp: React.FC = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+              className="border border-b-gray-500 block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -264,7 +264,7 @@ const SignUp: React.FC = () => {
               value={password}
               id="password"
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+              className="border border-b-gray-500 block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
           </div>
@@ -281,7 +281,7 @@ const SignUp: React.FC = () => {
               value={passwordConfirm}
               id="cpassword"
               onChange={(e) => setPasswordConfirm(e.target.value)}
-              className="block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
+              className="border border-b-gray-500 block w-full rounded-md border-default shadow-theme focus:border-primary focus:ring-primary py-2.5 px-3"
               required
             />
             {password && passwordConfirm && password !== passwordConfirm && (
