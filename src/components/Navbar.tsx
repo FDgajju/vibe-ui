@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const userId = localStorage.getItem("user_id")
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
@@ -18,7 +19,7 @@ const Navbar: React.FC = () => {
       onClick: undefined,
     },
     {
-      name: "Sign Out",
+      name: userId ?"Sign Out" : "Sign In",
       path: "/signin",
       onClick: handleSignOut,
     },
