@@ -43,11 +43,12 @@ const AuthChecker: React.FC = () => {
 };
 
 const AppRoutes: React.FC = () => {
+  const userId = localStorage.getItem("user_id");
+
   return (
     <Router>
       <AuthChecker />
       <Toaster />
-
       <Navbar />
       <main className="px-4 md:px-6 lg:px-8 pt-24 pb-20 mx-auto max-w-3xl">
         <Routes>
@@ -62,7 +63,7 @@ const AppRoutes: React.FC = () => {
           <Route path="*" element={<Feed />} />
         </Routes>
       </main>
-      <BottomNavBar />
+      {userId ? <BottomNavBar /> : ""}
     </Router>
   );
 };
